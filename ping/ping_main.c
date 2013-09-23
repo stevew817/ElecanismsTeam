@@ -43,7 +43,7 @@
 #define PWM_TIM		&timer4
 #define PWM_OC		&oc3
 #define DIST_TIM	&timer5
-#define SONIC_FREQ	40000f
+#define SONIC_FREQ	40000
 
 uint16_t pan_set_val = 0, tilt_set_val = 0;
 

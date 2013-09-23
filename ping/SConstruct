@@ -17,7 +17,7 @@ list = Builder(action = 'xc16-objdump -S -D $SOURCE > $TARGET',
                src_suffix = 'elf')
 env.Append(BUILDERS = {'List' : list})
 
-env.Program('blink', ['hellousb.c',
+env.Program('ping', ['ping_main.c',
                       'descriptors.c', 
                       'usb.c', 
                       '../lib/pin.c', 
@@ -25,5 +25,5 @@ env.Program('blink', ['hellousb.c',
                       '../lib/timer.c',
                       '../lib/ui.c',
 					  '../lib/oc.c'])
-env.Hex('blink')
-env.List('blink')
+env.Hex('ping')
+env.List('ping')
