@@ -85,10 +85,31 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
 		case GET_DIST:
+            timer_start(PWM_TIM);
+            timer_start(DIST_TIM);
 			pin_write(SONIC_OUT_PIN, 0x8000);
-			while(pin_read(SONIC_IN_PIN) == 0 && i != 0) {
+
+            while (1) {
+                if (timer_flag(PWM_TIM)) {
+                    pin_write(SONIC_OUT_PIN, 0x0000);  
+                    timer_lower(PWM_TIM);
+                    break;
+                }
+            }
+
+            while(1) {
+                if(pin_read(SONIC_IN_PIN) == 1){
+                    timer_stop(DIST_TIM);
+                    break;
+                }
+                else if(timer_flag(PWM_TIM)) {     //timeout period will be set based on experimentation
+                    break;
+                }   
+            }
+
+			/*while(pin_read(SONIC_IN_PIN) == 0 && i != 0) {
 				i++;
-			}
+			} */
 			
 			temp.w = pan_set_val;
             BD[EP0IN].address[0] = temp.b[0];
@@ -96,10 +117,10 @@ void VendorRequests(void) {
             temp.w = tilt_set_val;
             BD[EP0IN].address[2] = temp.b[0];
             BD[EP0IN].address[3] = temp.b[1];
-			temp.w = i;
+			temp.w = timer_time(DIST_TIM);
 			BD[EP0IN].address[4] = temp.b[0];
             BD[EP0IN].address[5] = temp.b[1];
-            BD[EP0IN].bytecount = 6;    // set EP0 IN byte count to 4
+            BD[EP0IN].bytecount = 6;    // set EP0 IN byte count to 6
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         default:
@@ -147,8 +168,14 @@ int16_t main(void) {
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
 	
+    //Configure timer for transducer burst
+    timer_setPeriod(PWM_TIM, 0.0005);
+    //Configure timer for reciever timeout
+    timer_setPeriod(DIST_TIM, 0.05);
+
+
 	//configure PWM on sonic output pin
-	oc_pwm(PWM_OC, SONIC_OUT_PIN, PWM_TIM, SONIC_FREQ, 0x0000);
+	oc_pwm(PWM_OC, SONIC_OUT_PIN, NULL, SONIC_FREQ, 0x0000);
 	
 	//According to HobbyKing documentation: range .8 through 2.2 msec
 	//Set servo control pins as OC outputs on their respective timers
@@ -170,9 +197,6 @@ int16_t main(void) {
             timer_lower(LED_TIM);
             led_toggle(LED);
         }
-		
-		//turn on the ultrasonic transducer
-		pin_write(SONIC_OUT_PIN, 0x8000);
 		
 		//Update the servo control values.
 		pin_write(PAN_PIN, pan_set_val);
