@@ -85,6 +85,8 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
 		case GET_DIST:
+            //Configure timer for transducer burst
+            timer_setPeriod(PWM_TIM, 0.0005);
             timer_start(PWM_TIM);
             timer_start(DIST_TIM);
 			pin_write(SONIC_OUT_PIN, 0x8000);
@@ -92,32 +94,40 @@ void VendorRequests(void) {
             while (1) {
                 if (timer_flag(PWM_TIM)) {
                     pin_write(SONIC_OUT_PIN, 0x0000);  
-                    timer_lower(PWM_TIM);
+                    timer_stop(PWM_TIM);
                     break;
                 }
             }
+
+            timer_setPeriod(PWM_TIM, 0.001);
+            timer_start(PWM_TIM);
 
             while(1) {
-                if(pin_read(SONIC_IN_PIN) == 1){
-                    timer_stop(DIST_TIM);
-                    break;
+                if (timer_flag(PWM_TIM)) {
+                    if(pin_read(SONIC_IN_PIN) == 1){
+                        temp.w = timer_read(DIST_TIM);
+                        break;
+                    }
+                    else if(timer_flag(DIST_TIM)) {     //timeout period will be set based on experimentation
+                        temp.w = 0xFFFF;
+                        break;
+                    }   
                 }
-                else if(timer_flag(PWM_TIM)) {     //timeout period will be set based on experimentation
-                    break;
-                }   
             }
 
+            timer_stop(DIST_TIM);
+            timer_stop(PWM_TIM);
 			/*while(pin_read(SONIC_IN_PIN) == 0 && i != 0) {
 				i++;
 			} */
 			
-			temp.w = pan_set_val;
+			
             BD[EP0IN].address[0] = temp.b[0];
             BD[EP0IN].address[1] = temp.b[1];
-            temp.w = tilt_set_val;
+            temp.w = pan_set_val;
             BD[EP0IN].address[2] = temp.b[0];
             BD[EP0IN].address[3] = temp.b[1];
-			temp.w = timer_time(DIST_TIM);
+			temp.w = tilt_set_val;
 			BD[EP0IN].address[4] = temp.b[0];
             BD[EP0IN].address[5] = temp.b[1];
             BD[EP0IN].bytecount = 6;    // set EP0 IN byte count to 6
@@ -168,8 +178,7 @@ int16_t main(void) {
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
 	
-    //Configure timer for transducer burst
-    timer_setPeriod(PWM_TIM, 0.0005);
+
     //Configure timer for reciever timeout
     timer_setPeriod(DIST_TIM, 0.05);
 
