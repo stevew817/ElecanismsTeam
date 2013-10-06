@@ -22,7 +22,7 @@ tilt = IntVar()
 d_range = 180					#range of degrees to display with slider
 k = 65535/d_range				#maps angle to 16-bit servo position
 
-mapsize = 20					#amount of rows/cols in the depthmap
+mapsize = 40					#amount of rows/cols in the depthmap
 Depthmap = [[0 for i in range(mapsize)] for j in range(mapsize)]
 
 def move_servo(a):
