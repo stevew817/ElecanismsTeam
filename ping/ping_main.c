@@ -89,11 +89,11 @@ void VendorRequests(void) {
             timer_setPeriod(PWM_TIM, 0.0005);
             timer_start(PWM_TIM);		//start the timer for the PWM signal
             timer_start(DIST_TIM);		//start the timer for the distance measurement
-			pin_write(SONIC_OUT_PIN, 0x8000);		//Geeta:send the sonic burst????????
+			pin_write(SONIC_OUT_PIN, 0x8000);		//send the sonic burst by setting it to 50% duty cycle
 
             while (1) {
                 if (timer_flag(PWM_TIM)) {			//If the timer runs out for PWM
-                    pin_write(SONIC_OUT_PIN, 0x0000);	//Geeta: I don't remember what this line does with 0x0000
+                    pin_write(SONIC_OUT_PIN, 0x0000);	//Stopping the sonic burst transmission by setting it to 0% duty cycle
                     timer_stop(PWM_TIM);				//stop PWM timer
                     break;
                 }
@@ -104,7 +104,7 @@ void VendorRequests(void) {
 
             while(1) {
                 if (timer_flag(PWM_TIM)) {			//If the timer runs out for PWM
-                    if(pin_read(SONIC_IN_PIN) == 1){	//Geeta: If the pin gets back a value, the echo is received
+                    if(pin_read(SONIC_IN_PIN) == 1){	//If the pin gets back a value, the echo is received
                         temp.w = timer_read(DIST_TIM);	//Get the value of the timer for Distance and store in temp.w to be sent to laptop
                         break;
                     }
