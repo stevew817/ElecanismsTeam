@@ -87,25 +87,25 @@ void VendorRequests(void) {
 		case GET_DIST:
             //Configure timer for transducer burst
             timer_setPeriod(PWM_TIM, 0.0005);
-            timer_start(PWM_TIM);
-            timer_start(DIST_TIM);
-			pin_write(SONIC_OUT_PIN, 0x8000);
+            timer_start(PWM_TIM);		//start the timer for the PWM signal
+            timer_start(DIST_TIM);		//start the timer for the distance measurement
+			pin_write(SONIC_OUT_PIN, 0x8000);		//Geeta:send the sonic burst????????
 
             while (1) {
-                if (timer_flag(PWM_TIM)) {
-                    pin_write(SONIC_OUT_PIN, 0x0000);  
-                    timer_stop(PWM_TIM);
+                if (timer_flag(PWM_TIM)) {			//If the timer runs out for PWM
+                    pin_write(SONIC_OUT_PIN, 0x0000);	//Geeta: I don't remember what this line does with 0x0000
+                    timer_stop(PWM_TIM);				//stop PWM timer
                     break;
                 }
             }
 
-            timer_setPeriod(PWM_TIM, 0.001);
-            timer_start(PWM_TIM);
+            timer_setPeriod(PWM_TIM, 0.001);		//reset the PWM timer period to 1 milliseconds
+            timer_666t5start(PWM_TIM);				//Geeta: I THINK THIS IS A TYPO?
 
             while(1) {
-                if (timer_flag(PWM_TIM)) {
-                    if(pin_read(SONIC_IN_PIN) == 1){
-                        temp.w = timer_read(DIST_TIM);
+                if (timer_flag(PWM_TIM)) {			//If the timer runs out for PWM
+                    if(pin_read(SONIC_IN_PIN) == 1){	//Geeta: If the pin gets back a value, the echo is received
+                        temp.w = timer_read(DIST_TIM);	//Get the value of the timer for Distance and store in temp.w to be sent to laptop
                         break;
                     }
                     else if(timer_flag(DIST_TIM)) {     //timeout period will be set based on experimentation
