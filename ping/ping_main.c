@@ -100,7 +100,7 @@ void VendorRequests(void) {
             }
 
             timer_setPeriod(PWM_TIM, 0.001);		//reset the PWM timer period to 1 milliseconds
-            timer_666t5start(PWM_TIM);				//Geeta: I THINK THIS IS A TYPO?
+            timer_start(PWM_TIM);				
 
             while(1) {
                 if (timer_flag(PWM_TIM)) {			//If the timer runs out for PWM
