@@ -1,6 +1,6 @@
 /***************************************************************************
-*	Elecanisms 2013 Miniproject 2:
-*	Servo control using USB and a Python GUI
+*	Elecanisms 2013 Miniproject 4:
+*	Haptic feedback control for a steering wheel
 *	Geeta, Sarah and Steven
 ***************************************************************************/
 
@@ -20,23 +20,12 @@
 #define GET_VALS    2   // Vendor request that returns 2 unsigned integer values
 #define PRINT_VALS  3   // Vendor request that prints 2 unsigned integer values 
 
-#define PAN_PIN		&D[2]
-#define TILT_PIN	&D[3]
-
-#define SERVO_PERIOD	0.02f
-#define SERVO_MIN		0.0008f
-#define SERVO_MAX		0.0022f
-
-#define SERVO1_OC	&oc1
-#define SERVO2_OC	&oc2
-
-#define SERVO1_TIM	&timer1
-#define SERVO2_TIM	&timer2
 #define LED_TIM		&timer3
 
 #define LED 		&led1
 
-uint16_t pan_set_val = 0, tilt_set_val = 0;
+
+volatile int speed_ticks = 0;
 
 //void ClassRequests(void) {
 //    switch (USB_setup.bRequest) {
@@ -47,7 +36,7 @@ uint16_t pan_set_val = 0, tilt_set_val = 0;
 
 void VendorRequests(void) {
     WORD temp;
-
+	uint16_t i = 1;
     switch (USB_setup.bRequest) {
         case HELLO:
             printf("Hello World!\n");
@@ -55,23 +44,23 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case SET_VALS:
-            pan_set_val = USB_setup.wValue.w;
-            tilt_set_val = USB_setup.wIndex.w;
+            //pan_set_val = USB_setup.wValue.w;
+            //tilt_set_val = USB_setup.wIndex.w;
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0 
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_VALS:
-            temp.w = pan_set_val;
+            //temp.w = pan_set_val;
             BD[EP0IN].address[0] = temp.b[0];
             BD[EP0IN].address[1] = temp.b[1];
-            temp.w = tilt_set_val;
+            //temp.w = tilt_set_val;
             BD[EP0IN].address[2] = temp.b[0];
             BD[EP0IN].address[3] = temp.b[1];
             BD[EP0IN].bytecount = 4;    // set EP0 IN byte count to 4
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;            
         case PRINT_VALS:
-            printf("pan_set_val = %u, tilt_set_val = %u\n", pan_set_val, tilt_set_val);
+            //printf("pan_set_val = %u, tilt_set_val = %u\n", pan_set_val, tilt_set_val);
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
@@ -94,6 +83,9 @@ void VendorRequestsOut(void) {
     }
 }
 
+/* ----------------------------------------------------------
+*	MAIN
+-----------------------------------------------------------*/
 int16_t main(void) {
 	//initialize all system clocks
     init_clock();
@@ -108,20 +100,16 @@ int16_t main(void) {
 	//initialize the OC module (used by the servo driving code)
 	init_oc();
 	
-	//Set servo control pins as output
-	pin_digitalOut(PAN_PIN);
-	pin_digitalOut(TILT_PIN);
-	
+	//initialize motor
+	motor_setup();
+
 	//Set LED off
 	led_off(LED);
 	//Configure blinking rate for LED when connected
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
 	
-	//According to HobbyKing documentation: range .8 through 2.2 msec
-	//Set servo control pins as OC outputs on their respective timers
-	oc_servo(SERVO1_OC, PAN_PIN, 	SERVO1_TIM, SERVO_PERIOD, SERVO_MIN, SERVO_MAX, pan_set_val);
-	oc_servo(SERVO2_OC, TILT_PIN, 	SERVO2_TIM, SERVO_PERIOD, SERVO_MIN, SERVO_MAX, tilt_set_val);
+	
 
     InitUSB();                              // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
@@ -139,9 +127,15 @@ int16_t main(void) {
             led_toggle(LED);
         }
 		
-		//Update the servo control values.
-		pin_write(PAN_PIN, pan_set_val);
-		pin_write(TILT_PIN, tilt_set_val);
+		if(!sw_read(&sw2)) {
+			motor_start();
+			motor_turn_left();
+		}
+		if(!sw_read(&sw3)) {
+			motor_turn_right();
+			motor_start();
+		}
+		if(!sw_read(&sw1)) motor_stop();
     }
 }
 

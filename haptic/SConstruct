@@ -24,6 +24,7 @@ env.Program('haptic', ['haptic.c',
                       '../lib/uart.c',
                       '../lib/timer.c',
                       '../lib/ui.c',
-					  '../lib/oc.c'])
+					  '../lib/oc.c',
+					  'motor.c'])
 env.Hex('haptic')
 env.List('haptic')
