@@ -15,6 +15,9 @@
 #include "motor.h"
 #include "oc.h"
 
+#define CUR &A[0]
+
+uint16_t m_dir;
 /* ----------------------------------------------------------
 *	MOTOR CONTROL CODE
 -----------------------------------------------------------*/
@@ -77,4 +80,12 @@ uint16_t motor_get_speed() {
 	return pin_read(D2);
 }
 
+uint16_t motor_get_direction() {
+	m_dir = pin_read(CUR);
+	if (m_dir >= 0x8000) {
+		return 1;
+	}
+	else
+		return 0;
+}
 

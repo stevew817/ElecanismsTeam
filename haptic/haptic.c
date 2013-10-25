@@ -21,11 +21,11 @@
 #define PRINT_VALS  3   // Vendor request that prints 2 unsigned integer values 
 
 #define LED_TIM		&timer3
-
 #define LED 		&led1
 
-
 volatile int speed_ticks = 0;
+uint16_t enc = 0;
+uint16_t dir = 0;
 
 //void ClassRequests(void) {
 //    switch (USB_setup.bRequest) {
@@ -50,10 +50,10 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_VALS:
-            //temp.w = pan_set_val;
+            temp.w = enc;
             BD[EP0IN].address[0] = temp.b[0];
             BD[EP0IN].address[1] = temp.b[1];
-            //temp.w = tilt_set_val;
+            temp.w = dir;
             BD[EP0IN].address[2] = temp.b[0];
             BD[EP0IN].address[3] = temp.b[1];
             BD[EP0IN].bytecount = 4;    // set EP0 IN byte count to 4
@@ -83,6 +83,17 @@ void VendorRequestsOut(void) {
     }
 }
 
+
+void __attribute__((interrupt, auto_psv)) _CNInterrupt(void) {
+    IFS1bits.CNIF = 0;
+    if (dir == 1){
+        enc++;
+    }
+    else
+        enc--;
+    pin_read(&D[0]);
+} 
+
 /* ----------------------------------------------------------
 *	MAIN
 -----------------------------------------------------------*/
@@ -109,6 +120,14 @@ int16_t main(void) {
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
 	
+
+    //Set Change Notification Interrupt Enable high
+    IEC1bits.CNIE = 1;
+    //Enable encoder interrupt (CN14)
+    CNEN1bits.CN14IE = 1;
+    //Initialize interrupt flag register bits low
+    IFS1bits.CNIF = 0;
+
 	
 
     InitUSB();                              // initialize the USB registers and serial interface engine
@@ -122,6 +141,8 @@ int16_t main(void) {
         ServiceUSB();                       // service any pending USB requests
 		
 		//blink the LED
+        dir = motor_get_direction();
+
 		if (timer_flag(LED_TIM)) {
             timer_lower(LED_TIM);
             led_toggle(LED);
