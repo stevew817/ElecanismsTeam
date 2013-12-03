@@ -103,7 +103,7 @@ void setDefaultParameters()
   config.rcChannelPitch = 1;
   config.rcMid = MID_RC;
   config.rcAbsolute = true;
-  config.accOutput=true;
+  config.accOutput=false;
   config.enableGyro=true;
   config.enableACC=true;
   config.axisReverseZ=true;

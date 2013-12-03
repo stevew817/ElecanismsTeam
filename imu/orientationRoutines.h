@@ -45,7 +45,7 @@ void initResolutionDevider()
 void gyroOffsetCalibration()
 {
   int i;
-  #define TOL 128
+  #define TOL 160
   #define GYRO_INTERATIONS 2000
   int16_t prevGyro[3],gyro[3];
   float fp_gyroOffset[3];

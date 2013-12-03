@@ -26,7 +26,7 @@ void setupMotors(void) {
 	oc_pwm(MOT_1_A_OC, MOT_1_A_PIN, MOT_TIM, 32000., 0);
 	oc_pwm(MOT_1_B_OC, MOT_1_B_PIN, MOT_TIM, 32000., 0);
 	oc_pwm(MOT_1_C_OC, MOT_1_C_PIN, MOT_TIM, 32000., 0);
-	oc_pwm(&oc7, &D[4], MOT_TIM, 32000., 0x8FFF);
+	oc_pwm(LOOP_OC, LOOP_PIN, MOT_TIM, 0.001, 0x8FFF);
 	
 	timer_stop(MOT_TIM);
 	
@@ -74,18 +74,18 @@ inline void MoveMotorPosSpeed(uint8_t motorNumber, int MotorPos, uint8_t* pwmSin
   {
     posStep = (MotorPos >> 3) & 0xFF;
 	
-	set_motor(MOT_0_A_OC, pwmSin[(uint8_t)posStep]);
-	set_motor(MOT_0_B_OC, pwmSin[(uint8_t)posStep + 85]);
-	set_motor(MOT_0_C_OC, pwmSin[(uint8_t)posStep + 170]);
+	set_motor(MOT_0_A_OC, pwmSin[posStep]);
+	set_motor(MOT_0_B_OC, pwmSin[(posStep + 85) & 0xFF]);
+	set_motor(MOT_0_C_OC, pwmSin[(posStep + 170) & 0xFF]);
   }
  
   if (motorNumber == 1)
   {
     posStep = (MotorPos >> 3) & 0xFF;
     
-	set_motor(MOT_1_A_OC, pwmSin[(uint8_t)posStep]);
-	set_motor(MOT_1_B_OC, pwmSin[(uint8_t)posStep + 85]);
-	set_motor(MOT_1_C_OC, pwmSin[(uint8_t)posStep + 170]);
+	set_motor(MOT_1_A_OC, pwmSin[posStep]);
+	set_motor(MOT_1_B_OC, pwmSin[(posStep + 85) & 0xFF]);
+	set_motor(MOT_1_C_OC, pwmSin[(posStep + 170) & 0xFF]);
   }
 }
 
@@ -96,27 +96,34 @@ void fastMoveMotor(uint8_t motorNumber, int dirStep,uint8_t* pwmSin)
   if (motorNumber == 0)
   {
     currentStepMotor0 += dirStep;
-    currentStepMotor0 &= 0xff;
+    currentStepMotor0 &= 0xFF;
 	
-	set_motor(MOT_0_A_OC, pwmSin[(uint8_t)currentStepMotor0]);
-	set_motor(MOT_0_B_OC, pwmSin[(uint8_t)currentStepMotor0 + 85]);
-	set_motor(MOT_0_C_OC, pwmSin[(uint8_t)currentStepMotor0 + 170]);
+	set_motor(MOT_0_A_OC, pwmSin[currentStepMotor0]);
+	set_motor(MOT_0_B_OC, pwmSin[(currentStepMotor0 + 85)  & 0xFF]);
+	set_motor(MOT_0_C_OC, pwmSin[(currentStepMotor0 + 170) & 0xFF]);
   }
  
   if (motorNumber == 1)
   {
     currentStepMotor1 += dirStep;
-    currentStepMotor1 &= 0xff;
+    currentStepMotor1 &= 0xFF;
+	//printf("MOTOR: %d\t%d\t%d\t", pwmSin[(uint8_t)currentStepMotor1], pwmSin[(uint8_t)currentStepMotor1 + 85], pwmSin[(uint8_t)currentStepMotor1 + 170]);
+	//AAAAAARGH! casting only the vaiable to uint8_t does not make it overflow from 255->0...
+	//Need to cast the total sum to uint8_t (or cut off the upper bits...)
 	
-	set_motor(MOT_1_A_OC, pwmSin[(uint8_t)currentStepMotor1]);
-	set_motor(MOT_1_B_OC, pwmSin[(uint8_t)currentStepMotor1 + 85]);
-	set_motor(MOT_1_C_OC, pwmSin[(uint8_t)currentStepMotor1 + 170]);
+	//It worked fine for the motor 1 because the overflow went innto the next memory addresses... which were the same sinusoid array over again for the roll motor.
+	set_motor(MOT_1_A_OC, pwmSin[currentStepMotor1]);
+	set_motor(MOT_1_B_OC, pwmSin[(currentStepMotor1 + 85)  & 0xFF]);
+	set_motor(MOT_1_C_OC, pwmSin[(currentStepMotor1 + 170) & 0xFF]);
+	//printf("\n");
   }
 }
 
 inline void set_motor(_OC *channel, uint8_t value) {
+	
 	*(channel->OCxR)  = (uint16_t) (255 - (uint16_t)value);
 	*(channel->OCxRS) = (uint16_t) (255 + (uint16_t)value);
+	//printf("%d\t%d\t", *(channel->OCxR), *(channel->OCxRS));
 }
 
 inline void MotorOff(uint8_t motorNumber, uint8_t* pwmSin)
@@ -172,6 +179,9 @@ void motorTest() {
 	for(i=0; i<2550; i++) { fastMoveMotor(config.motorNumberPitch, 1,pwmSinMotorPitch); __delay_ms(2);  }
 	for(i=0; i<2550; i++) { fastMoveMotor(config.motorNumberPitch, -1,pwmSinMotorPitch); __delay_ms(2);  }
 	__delay_ms(200 * 32);
-	//for(i=0; i<100; i++) { fastMoveMotor(config.motorNumberRoll, 1,pwmSinMotorRoll); __delay_ms(1);  }
-	//for(i=0; i<100; i++) { fastMoveMotor(config.motorNumberRoll, -1,pwmSinMotorRoll); __delay_ms(1);  } 
+	for(i=0; i<512; i++) { 
+		fastMoveMotor(config.motorNumberRoll, 1, pwmSinMotorRoll); 
+		__delay_ms(2);  }
+	for(i=0; i<2550; i++) { fastMoveMotor(config.motorNumberRoll, -1,pwmSinMotorRoll); __delay_ms(2);  } 
+	__delay_ms(1000);
 }

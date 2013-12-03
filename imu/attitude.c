@@ -43,8 +43,8 @@ void initSensorOrientationDefault() {
   sensorDef.Gyro[PITCH].idx = 1;
   sensorDef.Gyro[YAW].idx = 2;
 
-  sensorDef.Acc[ROLL].idx = 1;     // y
-  sensorDef.Acc[PITCH].idx = 0;    // x
+  sensorDef.Acc[ROLL].idx = 0;     // y (perpendicular to x-gyro dir)
+  sensorDef.Acc[PITCH].idx = 1;    // x (perpendicular to y-gyro dir)
   sensorDef.Acc[YAW].idx = 2;      // z
 
   // direction
@@ -53,7 +53,7 @@ void initSensorOrientationDefault() {
   sensorDef.Gyro[YAW].dir = 1;
 
   sensorDef.Acc[ROLL].dir = 1;
-  sensorDef.Acc[PITCH].dir = 1;
+  sensorDef.Acc[PITCH].dir = -1;
   sensorDef.Acc[YAW].dir = 1;
   
 }

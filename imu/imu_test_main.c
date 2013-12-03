@@ -34,6 +34,8 @@
 #define LED_TIM     &timer3
 #define LED         &led1
 
+#define FREQ_PIN	&D[8]
+
 #define POUT_FREQ 25     // rate of ACC print output in Hz, 25 Hz is default
 #define LOCK_TIME_SEC 5  // gimbal fast lock time at startup 
 
@@ -92,6 +94,9 @@ int16_t main(void) {
 
     //Set LED off
     led_off(LED);
+	//Set main loop frequency check pin
+	pin_digitalOut(FREQ_PIN);
+	pin_clear(FREQ_PIN);
     //Configure blinking rate for LED when connected
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
@@ -99,13 +104,23 @@ int16_t main(void) {
 	printf("Gyro ID: %d, Acc ID: %d\n", gyro_read(WHO_AM_I), accel_read(I2CADD));
 	accel_set_measure_mode();
 	gyro_set_measure_mode();
-	accel_read_xyz((int *)accelval);
-	accelval[0] = 0;
-	accelval[1] = 0;
-	accelval[2] = 0;
+	
+	
+	//Re-calibrate the accelerometer, even after soft reset
+		accelval[0] = 0;
+		accelval[1] = 0;
+		accelval[2] = 0;
 	accel_calibrate((int *)accelval);
 	
-	gyroOffsetCalibration();
+	//		GYRO CALIBRATION HAS BEEN DONE BY HAND
+	accel_read_xyz((int *)accelval);
+		// CALIBRATION VALUES HAND-CALCULATED
+		accelval[0] = -accelval[0];
+		accelval[1] = -accelval[1];
+		accelval[2] = 64-accelval[2];
+	accel_calibrate((int *)accelval);
+	
+	
 	
 	printf("Starting motor init sequence...\n");
 	setDefaultParameters();
@@ -113,14 +128,20 @@ int16_t main(void) {
 	setupMotors();
 	motorTest();
 	
+	
+	
 	initResolutionDevider();
 	initIMU();
+	initSensorOrientationDefault();
+	gyroOffsetCalibration();
 	initPIDs();
 	
     printf("starting main loop\n");
 	timer_setPeriod(&timer5, 1.0f);
     while (1) {
         
+		accel_read_xyz((int *)accelval);
+		//printf("%d,\t%d,\t%d\n", accelval[0], accelval[1], accelval[2]);
 		
         //blink the LED
         if (timer_flag(LED_TIM)) {
@@ -149,11 +170,12 @@ int16_t main(void) {
 		//accel_get_measurements(&(accelvals[0]), &(accelvals[1]), &(accelvals[2]));
 		
 		//printf("Gyro X: %s\n", inttobinarystr(gyrovals[0]));
-		//printf("Accel: %d, %d, %d\n", accelvals[0], accelvals[1], accelvals[2]);
+		//printf("Accel: %d,%d, %d\n", accelvals[0], accelvals[1], accelvals[2]);
 		//__delay_ms(200);
 		
 		if (motorUpdate == true) // loop runs with motor ISR update rate (1000Hz)
 		{
+			pin_toggle(FREQ_PIN);
 			timer_start(&timer5);
 			motorUpdate = false;
 
@@ -184,8 +206,8 @@ int16_t main(void) {
 			// motor control
 			rollMotorDrive = rollPIDVal * config.dirMotorRoll;
 			
-			printf("PITCH %ld\t", pitchMotorDrive);
-			printf("ROLL %ld\n", rollMotorDrive);
+			//printf("PITCH %ld\t", pitchMotorDrive);
+			//printf("ROLL %ld\n", rollMotorDrive);
 			//****************************
 			// slow rate actions
 			//****************************
@@ -255,7 +277,11 @@ int16_t main(void) {
 			  if (pOutCnt == (LOOPUPDATE_FREQ/10/POUT_FREQ))
 			  {
 				// 600 us
-				if(config.accOutput==1){ printf("%ld", angle[PITCH]); printf(" ACC ");printf("%ld\n", angle[ROLL]);}
+				if(config.accOutput==true){ 
+				
+					printf("%ld", angle[PITCH]); printf(" ACC ");printf("%ld\t", angle[ROLL]); printf("%d\t%d\t%d\t%d\n", accADC[PITCH], accADC[ROLL], gyroADC[PITCH], gyroADC[ROLL]);
+					
+				}
 				pOutCnt = 0;
 			  }
 			  break;
