@@ -103,13 +103,14 @@ void imu_init(void);
 extern _PIN IMU_MOSI, IMU_MISO, IMU_SCK, ACCEL_CS, GYRO_CS;
 
 extern int accel_xyz[3];
-extern int accel_offsets[3];
+//extern int accel_offsets[3];
 
 void            accel_write(unsigned char address, unsigned char value);
 unsigned char   accel_read(unsigned char address);
 void            accel_set_measure_mode(void);
 void            accel_read_xyz(int * data);
 void            accel_calibrate(int * offsets);
+void			accel_get_measurements(int16_t*, int16_t*, int16_t*);
 
 // Gyroscope function prototypes
 //
@@ -118,5 +119,7 @@ extern int gyro_xyz[3];
 void            gyro_write(unsigned char address, unsigned char value);
 unsigned char   gyro_read(unsigned char address);
 void            gyro_init(void);
+void 			gyro_set_measure_mode(void);
+void 			gyro_get_measurements(int16_t*, int16_t*, int16_t*);
 
 #endif
