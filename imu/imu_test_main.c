@@ -126,13 +126,15 @@ int16_t main(void) {
 	setDefaultParameters();
 	recalcMotorStuff();
 	setupMotors();
-	motorTest();
+	//motorTest();
 	
 	
 	
 	initResolutionDevider();
 	initIMU();
-	initSensorOrientationDefault();
+	printf("Setting orientation...\n");
+	initSensorOrientation();
+	printf("Calibrating Gyro...\n");
 	gyroOffsetCalibration();
 	initPIDs();
 	

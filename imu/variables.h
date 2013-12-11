@@ -80,7 +80,7 @@ void setDefaultParameters()
   config.gyroRollKp = 20000;
   config.gyroRollKi = 8000;
   config.gyroRollKd = 30000;
-  config.accTimeConstant = 7;
+  config.accTimeConstant = 4;
   config.mpuLPF = 0;
   config.angleOffsetPitch = 0;
   config.angleOffsetRoll = 0;
@@ -90,8 +90,8 @@ void setDefaultParameters()
   config.dirMotorRoll = -1;
   config.motorNumberPitch = 0;
   config.motorNumberRoll = 1;
-  config.maxPWMmotorPitch = 120;
-  config.maxPWMmotorRoll = 120;
+  config.maxPWMmotorPitch = 150;
+  config.maxPWMmotorRoll = 100;
   config.minRCPitch = -30;
   config.maxRCPitch = 30;
   config.minRCRoll = -30;
