@@ -21,6 +21,17 @@
 #include "externvariables.h"
 #include "serialcommands.h"
 #include <string.h>
+#include "uart.h"
+
+extern void recalcMotorStuff();
+extern void initPIDs();
+extern void initIMU();
+//extern void initMPUlpf();
+extern void initSensorOrientation();
+extern void setDefaultParameters();
+extern void updateAllParameters();
+extern void gyroOffsetCalibration();
+
 
 // list of all config parameters
 // to be accessed by par command
@@ -34,7 +45,7 @@ const t_configDef configListPGM[] = {
   {"gyroRollKi",       INT32, &config.gyroRollKi,       &initPIDs},
   {"gyroRollKd",       INT32, &config.gyroRollKd,       &initPIDs},
   {"accTimeConstant",  INT16, &config.accTimeConstant,  &initIMU},
-  {"mpuLPF",           INT8,  &config.mpuLPF,           &initMPUlpf},
+  {"mpuLPF",           INT8,  &config.mpuLPF,           NULL}, //initMPUlpf
   
   {"angleOffsetPitch", INT16, &config.angleOffsetPitch, NULL},
   {"angleOffsetRoll",  INT16, &config.angleOffsetRoll,  NULL},
@@ -51,9 +62,9 @@ const t_configDef configListPGM[] = {
   {"minRCRoll",        INT8,  &config.minRCRoll,         NULL},
   {"maxRCRoll",        INT8,  &config.maxRCRoll,         NULL},
   {"rcGain",           INT16, &config.rcGain,            NULL},
-  {"rcLPF",            INT16, &config.rcLPF,             &initRC},
+  {"rcLPF",            INT16, &config.rcLPF,             NULL},
 
-  {"rcModePPM",        BOOL,  &config.rcModePPM,         &initRCPins},
+  {"rcModePPM",        BOOL,  &config.rcModePPM,         NULL},
   {"rcChannelPitch",   INT8,  &config.rcChannelPitch,    NULL},
   {"rcChannelRoll",    INT8,  &config.rcChannelRoll,     NULL},
   {"rcMid",            INT16, &config.rcMid,             NULL},
@@ -69,6 +80,7 @@ const t_configDef configListPGM[] = {
   
   {"", BOOL, NULL, NULL} // terminating NULL required !!
 };
+
 
 // ******************************** SERIAL PORT HANDLING PROCEDURES *************************************
 
@@ -175,7 +187,7 @@ void serial_readSerial() {
         }
       }
       // Serial.println(F("BruGi> ")); // TODO: BruGi prompt string 
-      clearBuffer();
+      serial_clearBuffer();
     }
     else if (isprint(inChar)) {     // Only printable characters into the buffer
       if (bufPos < SERIALCOMMAND_BUFFER) {
@@ -194,6 +206,10 @@ void serial_readSerial() {
 
 // ******************************** COMMAND HANDLING PROCEDURES *****************************************
 // find Config Definition for named parameter
+
+t_configDef configDef;
+t_configUnion configUnion;
+
 t_configDef * getConfigDef(char * name) {
 
   bool found = false; 
@@ -201,7 +217,7 @@ t_configDef * getConfigDef(char * name) {
   t_configDef * p = (t_configDef *)configListPGM;
 
   while (true) {
-	p = &configListPGM[idx];
+	p = &(configListPGM[idx]);
     if (p->address == NULL) break;
     if (strncmp(p->name, name, CONFIGNAME_MAX_LEN) == 0) {
       found = true;
@@ -280,10 +296,10 @@ void parameterMod() {
   
   int32_t val = 0;
 
-  if ((paraName = sCmd.next()) == NULL) {
+  if ((paraName = serial_next()) == NULL) {
     // no command parameter, print all config parameters
     printConfigAll((t_configDef *)configListPGM);
-  } else if ((paraValue = sCmd.next()) == NULL) {
+  } else if ((paraValue = serial_next()) == NULL) {
     // one parameter, print single parameter
     printConfig(getConfigDef(paraName));
   } else {
@@ -299,10 +315,10 @@ void updateAllParameters() {
   recalcMotorStuff();
   initPIDs();
   initIMU();
-  initMPUlpf();
+  //initMPUlpf();
   initSensorOrientation();
-  initRCPins();
-  initRC();
+  //initRCPins();
+  //initRC();
 }
 
 void setDefaultParametersAndUpdate() {
@@ -318,7 +334,7 @@ void transmitUseACC()  // TODO: remove obsolete command
 
 void toggleACCOutput()
 {
-  int temp = atoi(sCmd.next());
+  int temp = atoi(serial_next());
   if(temp==1)
     config.accOutput = true;
   else
@@ -327,7 +343,7 @@ void toggleACCOutput()
 
 void setUseACC() // TODO: remove obsolete command
 {
-  int temp = atoi(sCmd.next());
+  int temp = atoi(serial_next());
 }
 
 void transmitRCConfig()
@@ -345,7 +361,7 @@ void transmitRCAbsolute()
 
 void setRCGain()
 {
-    config.rcGain = atoi(sCmd.next());
+    config.rcGain = atoi(serial_next());
 }
 
 void transmitRCGain()
@@ -355,10 +371,10 @@ void transmitRCGain()
 
 void setRcMode()
 {
-    config.rcModePPM = atoi(sCmd.next());
-    config.rcChannelPitch = atoi(sCmd.next());
-    config.rcChannelRoll = atoi(sCmd.next());
-    initRCPins();
+    config.rcModePPM = atoi(serial_next());
+    config.rcChannelPitch = atoi(serial_next());
+    config.rcChannelRoll = atoi(serial_next());
+    //initRCPins();
 }
 
 void transmitRcMode()
@@ -370,7 +386,7 @@ void transmitRcMode()
 
 void setRCAbsolute()
 {
-  int temp = atoi(sCmd.next());
+  int temp = atoi(serial_next());
   if(temp==1)
   {
     config.rcAbsolute = true;
@@ -387,10 +403,10 @@ void setRCAbsolute()
 
 void setRCConfig()
 {
-  config.minRCPitch = atoi(sCmd.next());
-  config.maxRCPitch = atoi(sCmd.next());
-  config.minRCRoll = atoi(sCmd.next());
-  config.maxRCRoll = atoi(sCmd.next());
+  config.minRCPitch = atoi(serial_next());
+  config.maxRCPitch = atoi(serial_next());
+  config.minRCRoll = atoi(serial_next());
+  config.maxRCRoll = atoi(serial_next());
 }
 
 void transmitSensorOrientation()
@@ -450,47 +466,47 @@ void transmitActiveConfig()
 
 void setPitchPID()
 {
-  config.gyroPitchKp = atol(sCmd.next());
-  config.gyroPitchKi = atol(sCmd.next());
-  config.gyroPitchKd = atol(sCmd.next());
+  config.gyroPitchKp = atol(serial_next());
+  config.gyroPitchKi = atol(serial_next());
+  config.gyroPitchKd = atol(serial_next());
   initPIDs();
 }
 
 void setRollPID()
 {
-  config.gyroRollKp = atol(sCmd.next());
-  config.gyroRollKi = atol(sCmd.next());
-  config.gyroRollKd = atol(sCmd.next());
+  config.gyroRollKp = atol(serial_next());
+  config.gyroRollKi = atol(serial_next());
+  config.gyroRollKd = atol(serial_next());
   initPIDs();
 }
 
 void setMotorPWM()
 {
-  config.maxPWMmotorPitch = atoi(sCmd.next());
-  config.maxPWMmotorRoll = atoi(sCmd.next());
+  config.maxPWMmotorPitch = atoi(serial_next());
+  config.maxPWMmotorRoll = atoi(serial_next());
   recalcMotorStuff();
 }
 
 void gyroRecalibrate()
 {
-  mpu.setDLPFMode(MPU6050_DLPF_BW_5);  // experimental AHa: set to slow mode during calibration
+  //mpu.setDLPFMode(MPU6050_DLPF_BW_5);  // experimental AHa: set to slow mode during calibration
   gyroOffsetCalibration();
-  initMPUlpf();
-  Serial.println(F("recalibration: done"));
+  //initMPUlpf();
+  printf("recalibration: done\n");
 }
 
 void setMotorDirNo()
 {
-  config.dirMotorPitch = atoi(sCmd.next());
-  config.dirMotorRoll = atoi(sCmd.next());
-  config.motorNumberPitch = atoi(sCmd.next());
-  config.motorNumberRoll = atoi(sCmd.next());
+  config.dirMotorPitch = atoi(serial_next());
+  config.dirMotorRoll = atoi(serial_next());
+  config.motorNumberPitch = atoi(serial_next());
+  config.motorNumberRoll = atoi(serial_next());
 }
 
 void setSensorOrientation()
 {
-  config.axisReverseZ = atoi(sCmd.next());
-  config.axisSwapXY = atoi(sCmd.next());
+  config.axisReverseZ = atoi(serial_next());
+  config.axisSwapXY = atoi(serial_next());
 
   initSensorOrientation();
   
@@ -547,31 +563,31 @@ void unrecognized(const char *command)
 void setSerialProtocol()
 {
   // Setup callbacks for SerialCommand commands
-  sCmd.addCommand("sd", setDefaultParametersAndUpdate);   
-  sCmd.addCommand("we", writeEEPROM);   
-  sCmd.addCommand("re", readEEPROM); 
-  sCmd.addCommand("par", parameterMod);
-  sCmd.addCommand("gc", gyroRecalibrate);
+  serial_addCommand("sd", setDefaultParametersAndUpdate);   
+  serial_addCommand("we", writeEEPROM);   
+  serial_addCommand("re", readEEPROM); 
+  serial_addCommand("par", parameterMod);
+  serial_addCommand("gc", gyroRecalibrate);
 
-  sCmd.addCommand("tc", transmitActiveConfig);
-  sCmd.addCommand("sp", setPitchPID);
-  sCmd.addCommand("sr", setRollPID);
-  sCmd.addCommand("se", setMotorPWM);
-  sCmd.addCommand("sm", setMotorDirNo);
-  sCmd.addCommand("sso", setSensorOrientation);
-  sCmd.addCommand("tso", transmitSensorOrientation);
-  sCmd.addCommand("trc", transmitRCConfig);
-  sCmd.addCommand("src", setRCConfig);
-  sCmd.addCommand("srg", setRCGain);
-  sCmd.addCommand("srm", setRcMode);  
-  sCmd.addCommand("trm", transmitRcMode);  
-  sCmd.addCommand("sca", setRCAbsolute);
-  sCmd.addCommand("tca", transmitRCAbsolute);
-  sCmd.addCommand("trg", transmitRCGain);
-  sCmd.addCommand("uac", setUseACC);
-  sCmd.addCommand("tac", transmitUseACC);
-  sCmd.addCommand("oac", toggleACCOutput);
+  serial_addCommand("tc", transmitActiveConfig);
+  serial_addCommand("sp", setPitchPID);
+  serial_addCommand("sr", setRollPID);
+  serial_addCommand("se", setMotorPWM);
+  serial_addCommand("sm", setMotorDirNo);
+  serial_addCommand("sso", setSensorOrientation);
+  serial_addCommand("tso", transmitSensorOrientation);
+  serial_addCommand("trc", transmitRCConfig);
+  serial_addCommand("src", setRCConfig);
+  serial_addCommand("srg", setRCGain);
+  serial_addCommand("srm", setRcMode);  
+  serial_addCommand("trm", transmitRcMode);  
+  serial_addCommand("sca", setRCAbsolute);
+  serial_addCommand("tca", transmitRCAbsolute);
+  serial_addCommand("trg", transmitRCGain);
+  serial_addCommand("uac", setUseACC);
+  serial_addCommand("tac", transmitUseACC);
+  serial_addCommand("oac", toggleACCOutput);
 
-  sCmd.addCommand("he", printHelpUsage);
-  sCmd.setDefaultHandler(unrecognized);      // Handler for command that isn't matched  (says "What?")
+  serial_addCommand("he", printHelpUsage);
+  serial_setDefaultHandler(unrecognized);      // Handler for command that isn't matched  (says "What?")
 }

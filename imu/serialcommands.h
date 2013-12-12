@@ -17,7 +17,7 @@
 // Maximum length of a command including the terminating null
 #define SERIALCOMMAND_MAXCOMMANDLENGTH 4
 // Maximum amount of commands we're going to store
-#define COMMAND_COUNT 15
+#define COMMAND_COUNT 30
 
 void serial_addCommand(const char *command, void(*function)());  // Add a command to the processing dictionary.
 void serial_setDefaultHandler(void (*function)(const char *));   // A handler to call when no valid command received.
@@ -50,25 +50,23 @@ typedef enum {
   UINT32
 } confType_t;
 
-confType_t confType;
-
 #define CONFIGNAME_MAX_LEN 17
 typedef struct configDef {
   char name[CONFIGNAME_MAX_LEN];  // name of config parameter
-  confType type;                  // type of config parameters
+  confType_t type;                  // type of config parameters
   void * address;                 // address of config parameter
   void (* updateFunction)(void);  // function is called when parameter update happens
 } t_configDef;
 
-t_configDef configDef;
 
-// access decriptor as arry of bytes as well
+
+// access decriptor as array of bytes as well
 typedef union {
   t_configDef   c;
   char          bytes[sizeof(t_configDef)];
 } t_configUnion;
 
-t_configUnion configUnion;
+
 
 
 // find Config Definition for named parameter

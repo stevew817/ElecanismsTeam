@@ -20,6 +20,7 @@ env.Append(BUILDERS = {'List' : list})
 env.Program('imu', ['imu_test_main.c',
 					'brushless.c',
 					'attitude.c',
+					'serialcommands.c',
                       '../lib/pin.c', 
                       '../lib/uart.c',
                       '../lib/timer.c',

@@ -24,6 +24,7 @@
 #include "imu.h"
 #include "brushless.h"
 #include "attitude.h"
+#include "serialcommands.h"
 
 
 #define HELLO       0   // Vendor request that prints "Hello World!"
@@ -88,7 +89,7 @@ int16_t main(void) {
 	//Initialise the SPI for the IMU
 	init_spi();
 
-	printf("initializing IMU\n");
+	//printf("initializing IMU\n");
     //initialize imu module
     imu_init();
 
@@ -101,7 +102,7 @@ int16_t main(void) {
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
 	
-	printf("Gyro ID: %d, Acc ID: %d\n", gyro_read(WHO_AM_I), accel_read(I2CADD));
+	//printf("Gyro ID: %d, Acc ID: %d\n", gyro_read(WHO_AM_I), accel_read(I2CADD));
 	accel_set_measure_mode();
 	gyro_set_measure_mode();
 	
@@ -122,7 +123,7 @@ int16_t main(void) {
 	
 	
 	
-	printf("Starting motor init sequence...\n");
+	//printf("Starting motor init sequence...\n");
 	setDefaultParameters();
 	recalcMotorStuff();
 	setupMotors();
@@ -132,13 +133,13 @@ int16_t main(void) {
 	
 	initResolutionDevider();
 	initIMU();
-	printf("Setting orientation...\n");
+	//printf("Setting orientation...\n");
 	initSensorOrientation();
-	printf("Calibrating Gyro...\n");
+	//printf("Calibrating Gyro...\n");
 	gyroOffsetCalibration();
 	initPIDs();
 	
-    printf("starting main loop\n");
+    //printf("starting main loop\n");
 	timer_setPeriod(&timer5, 1.0f);
     while (1) {
         
@@ -281,7 +282,7 @@ int16_t main(void) {
 				// 600 us
 				if(config.accOutput==true){ 
 				
-					printf("%ld", angle[PITCH]); printf(" ACC ");printf("%ld\t", angle[ROLL]); printf("%d\t%d\t%d\t%d\n", accADC[PITCH], accADC[ROLL], gyroADC[PITCH], gyroADC[ROLL]);
+					printf("%ld", angle[PITCH]); printf(" ACC ");printf("%ld\n", angle[ROLL]); //printf("%d\t%d\t%d\t%d\n", accADC[PITCH], accADC[ROLL], gyroADC[PITCH], gyroADC[ROLL]);
 					
 				}
 				pOutCnt = 0;
@@ -305,7 +306,7 @@ int16_t main(void) {
 			//****************************
 			// Evaluate Serial inputs 
 			//****************************
-			//sCmd.readSerial();
+			serial_readSerial();
 		}
     }
 }
