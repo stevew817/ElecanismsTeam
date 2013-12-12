@@ -32,8 +32,8 @@ _UART uart1, uart2, uart3, uart4;
 _UART *_stdout, *_stderr;
 _PIN AJTX, AJRX;
 
-uint8_t stdrxbuf[30];
-int stdrxbuflen = 30;
+uint8_t stdrxbuf[1024];
+int stdrxbuflen = 1024;
 
 void __putc_nobuffer(_UART *self, uint8_t ch) {
     while (bitread(self->UxSTA, 9)==1) {}   // Wait until TX buffer is not full
