@@ -139,6 +139,8 @@ int16_t main(void) {
 	gyroOffsetCalibration();
 	initPIDs();
 	
+	setSerialProtocol();
+	
     //printf("starting main loop\n");
 	timer_setPeriod(&timer5, 1.0f);
     while (1) {

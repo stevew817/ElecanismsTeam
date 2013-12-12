@@ -23,6 +23,8 @@
 #include <string.h>
 #include "uart.h"
 
+//#define SERIALCOMMAND_DEBUG
+
 extern void recalcMotorStuff();
 extern void initPIDs();
 extern void initIMU();
@@ -105,7 +107,7 @@ void (*defaultHandler)(const char *) = NULL;
  */
 void serial_addCommand(const char *command, void (*function)()) {
   #ifdef SERIALCOMMAND_DEBUG
-    printf("Adding command (%d): %s", commandCount, command);
+    printf("Adding command (%d): %s\n", commandCount, command);
   #endif
 
   //no dynamic memory for us...
@@ -145,7 +147,7 @@ char * serial_next() {
  * buffer for a prefix command, and calls handlers setup by addCommand() member
  */
 void serial_readSerial() {
-  int i = 0;
+  int i = 0, j = 0;
   char * command = NULL;
   bool matched = false;
   
@@ -169,8 +171,8 @@ void serial_readSerial() {
           #endif
 
           // Compare the found command against the list of known commands for a match
-          for (i = 0; command[i] != '\0'; i++)   // as no strnicmp exists ...
-            command[i] = (char)tolower(command[i]);
+          for (j = 0; command[j] != '\0'; j++)   // as no strnicmp exists ...
+            command[j] = (char)tolower(command[j]);
           if (strncmp(command, commandList[i].command, SERIALCOMMAND_MAXCOMMANDLENGTH) == 0) {
             #ifdef SERIALCOMMAND_DEBUG
               printf("Matched Command: %s\n", command);
