@@ -23,7 +23,7 @@ void serial_addCommand(const char *command, void(*function)());  // Add a comman
 void serial_setDefaultHandler(void (*function)(const char *));   // A handler to call when no valid command received.
 
 void serial_readSerial();    // Main entry point.
-void serial_clearBuffer();   // Clears the input buffer.
+inline void serial_clearBuffer();   // Clears the input buffer.
 char *serial_next();         // Returns pointer to next token found in command buffer (for getting arguments to commands).
 
 // Command/handler dictionary

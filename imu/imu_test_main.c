@@ -102,7 +102,7 @@ int16_t main(void) {
     timer_setPeriod(LED_TIM, 0.2);
     timer_start(LED_TIM);
 	
-	//printf("Gyro ID: %d, Acc ID: %d\n", gyro_read(WHO_AM_I), accel_read(I2CADD));
+	printf("Gyro ID: %d, Acc ID: %d\n", gyro_read(WHO_AM_I), accel_read(I2CADD));
 	accel_set_measure_mode();
 	gyro_set_measure_mode();
 	
@@ -123,7 +123,7 @@ int16_t main(void) {
 	
 	
 	
-	//printf("Starting motor init sequence...\n");
+	printf("Starting motor init sequence...\n");
 	setDefaultParameters();
 	recalcMotorStuff();
 	setupMotors();
@@ -133,15 +133,15 @@ int16_t main(void) {
 	
 	initResolutionDevider();
 	initIMU();
-	//printf("Setting orientation...\n");
+	printf("Setting orientation...\n");
 	initSensorOrientation();
-	//printf("Calibrating Gyro...\n");
+	printf("Calibrating Gyro...\n");
 	gyroOffsetCalibration();
 	initPIDs();
 	
 	setSerialProtocol();
 	
-    //printf("starting main loop\n");
+    printf("starting main loop\n");
 	timer_setPeriod(&timer5, 1.0f);
     while (1) {
         

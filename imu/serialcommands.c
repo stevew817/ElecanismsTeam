@@ -90,7 +90,8 @@ SerialCommandCallback_t commandList[COMMAND_COUNT];   // Actual definition for c
 uint8_t commandCount = 0;
 
 char delim[2] = {' ', '\0'}; // null-terminated list of character to be used as delimeters for tokenizing (default " ")
-char term = '\n';     // Character that signals end of command (default '\n')
+const char term1 = '\n';     // Character that signals end of command (default '\n')
+const char term2 = '\r';
 
 char buffer[SERIALCOMMAND_BUFFER + 1] = {'\0', 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // Buffer of stored characters while waiting for terminator character
 uint8_t bufPos = 0;                        // Current position in the buffer
@@ -128,7 +129,7 @@ void serial_setDefaultHandler(void (*function)(const char *)) {
 /**
  * Clear the input buffer.
  */
-void serial_clearBuffer() {
+inline void serial_clearBuffer() {
   buffer[0] = '\0';
   bufPos = 0;
 }
@@ -157,7 +158,7 @@ void serial_readSerial() {
       uart_putc(&uart1, inChar);   // Echo back to serial stream
     #endif
 
-    if (inChar == term) {     // Check for the terminator (default '\r') meaning end of command
+    if ((inChar == term1) || (inChar == term2)) {     // Check for the terminator (default '\r') meaning end of command
       #ifdef SERIALCOMMAND_DEBUG
         printf("Received: %s\n", buffer);
       #endif
@@ -199,6 +200,9 @@ void serial_readSerial() {
         #ifdef SERIALCOMMAND_DEBUG
           printf("Line buffer is full - increase SERIALCOMMAND_BUFFER\n");
         #endif
+		
+		//Avoid a buffer crash
+		serial_clearBuffer();
       }
     }
   }
@@ -307,6 +311,9 @@ void parameterMod() {
   } else {
     // two parameters, set specified parameter
     val = atol(paraValue);
+	#ifdef SERIALCOMMAND_DEBUG
+         printf("Setting %s to %ld\n", paraName, val);
+    #endif
     writeConfig(getConfigDef(paraName), val);
   }
 }
