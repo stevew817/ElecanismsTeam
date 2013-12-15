@@ -61,7 +61,7 @@ void setupMotors(void) {
 	
 	//set up motor update callback
 	//timer_every(MOT_UPD_TIM, 0.001f, &update_motors_callback);
-	timer_setPeriod(MOT_UPD_TIM, 0.001);
+	timer_setPeriod(MOT_UPD_TIM, 0.002);
     timer_start(MOT_UPD_TIM);
 	
 }

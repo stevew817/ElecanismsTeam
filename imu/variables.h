@@ -74,12 +74,12 @@ void setDefaultParameters()
 {
   config.vers = VERSION;
   config.versEEPROM = VERSION_EEPROM;
-  config.gyroPitchKp = 20000;
-  config.gyroPitchKi = 10000;
-  config.gyroPitchKd = 40000;
-  config.gyroRollKp = 20000;
-  config.gyroRollKi = 8000;
-  config.gyroRollKd = 30000;
+  config.gyroPitchKp = 42000;
+  config.gyroPitchKi = 16000;
+  config.gyroPitchKd = 62500;
+  config.gyroRollKp = 11000;
+  config.gyroRollKi = 15000;
+  config.gyroRollKd = 17000;
   config.accTimeConstant = 4;
   config.mpuLPF = 0;
   config.angleOffsetPitch = 0;
@@ -90,8 +90,8 @@ void setDefaultParameters()
   config.dirMotorRoll = -1;
   config.motorNumberPitch = 0;
   config.motorNumberRoll = 1;
-  config.maxPWMmotorPitch = 150;
-  config.maxPWMmotorRoll = 100;
+  config.maxPWMmotorPitch = 170;
+  config.maxPWMmotorRoll = 180;
   config.minRCPitch = -30;
   config.maxRCPitch = 30;
   config.minRCRoll = -30;

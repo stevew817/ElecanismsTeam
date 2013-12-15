@@ -54,7 +54,7 @@ void initSensorOrientationDefault() {
 
   sensorDef.Acc[ROLL].dir = 1;
   sensorDef.Acc[PITCH].dir = -1;
-  sensorDef.Acc[YAW].dir = 1;
+  sensorDef.Acc[YAW].dir = -1;
   
 }
 
@@ -94,10 +94,12 @@ void initSensorOrientation() {
   if (config.axisSwapXY) {
     // swap gyro axis
     swap_char(&sensorDef.Gyro[ROLL].idx, &sensorDef.Gyro[PITCH].idx); 
-    swap_int(&sensorDef.Gyro[ROLL].dir, &sensorDef.Gyro[PITCH].dir); sensorDef.Gyro[PITCH].dir *= -1;   // try and error ;-)
+    swap_int(&sensorDef.Gyro[ROLL].dir, &sensorDef.Gyro[PITCH].dir); 
+	sensorDef.Gyro[PITCH].dir *= -1;   // try and error ;-)
     // swap acc axis
     swap_char(&sensorDef.Acc[ROLL].idx, &sensorDef.Acc[PITCH].idx);
-    swap_int(&sensorDef.Acc[ROLL].dir, &sensorDef.Acc[PITCH].dir); sensorDef.Acc[ROLL].dir *= -1;
+    swap_int(&sensorDef.Acc[ROLL].dir, &sensorDef.Acc[PITCH].dir); 
+	sensorDef.Acc[ROLL].dir *= -1;
   }
 }
 
